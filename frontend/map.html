@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+</head>
+
+<body>
+    <p>Host: <span id="host"></span></p>
+    <p>Destination(not implemented): <span id="dest"></span></p>
+    <h1>Map View</h1>
+        <p id="ref">refresh</p>
+        <script>
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+
+            var greenIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            var goldIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            var host = urlParams.get('i');
+            document.getElementById("host").innerText = host;
+            var dest = urlParams.get('q');
+            document.getElementById("dest").innerText = dest;
+            function doo() {
+                var routes = [];
+                var pins = [];
+
+                var map = L.map('map').setView([51.505, -0.09], 13);
+
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+
+
+                fetch('https://' + host + '/dirs/' + 'needtoaddplacepicker')
+                    .then((response) => response.json())
+                    .then((data) => setRoute(data));
+
+
+
+                function setRoute(json) {
+                    for (let i = 0; i < json['data'].length - 1; i++) {
+                        var rt = json['data'][i]['rtname'];
+                        console.log(rt);
+                        stcoods = json['data'][i]['deploc'].trim().split("      ")
+                        L.marker([stcoods[0].trim(), stcoods[1].trim()], { icon: greenIcon }).addTo(map).bindPopup("Start " + json['data'][i]['depname']);
+                        stcoods = json['data'][i]['arrloc'].trim().split("      ")
+                        L.marker([stcoods[0].trim(), stcoods[1].trim()], { icon: greenIcon }).addTo(map).bindPopup("End " + json['data'][i]['arrname']);
+                        //change for alternate route
+                        //setRouteView(0, rt);
+                        routes.push(rt)
+                    }
+                    setRouteView();
+                    getBusLocations();
+                }
+
+
+
+                function setRouteView() {
+                    for (let index = 0; index < routes.length; index++) {
+                        fetch('https://' + host + '/route/' + routes[index])
+                            .then((response) => response.json())
+                            .then((data) => route(data, index));
+
+                    }
+
+                    function route(json, index) {
+                        for (let i = 0; i < json['data'].length; i++) {
+                            var colos = new Array("blue", "black")
+                            var colo = colos[index]
+                            L.polyline(json['data'][i]).addTo(map).setStyle({ color: colo });
+
+                        }
+
+                    }
+                }
+
+                function getBusLocations() {
+                    for (let index = 0; index < routes.length; index++) {
+                        fetch('https://' + host + '/data/' + routes[index])
+                            .then((response) => response.json())
+                            .then((data) => handle(data, routes[index]));
+                    }
+
+
+                    function handle(json, r) {
+
+                        for (let i = 0; i < json['data'].length - 1; i++) {
+                            let lat = parseFloat(json['data'][i]['lat'])
+                            let lon = parseFloat(json['data'][i]['lon'])
+                            pins.push( L.marker([lat, lon]).addTo(map)
+                                .bindPopup('A ' + r + ' bus with ' + json['data'][i]['id'] + ' direction ' + json['data'][i]['bound']));
+                        }
+
+
+                    }
+                }
+
+                function refBusLocations() {
+                    for (let i = 0; i < pins.length; i++) {
+                        map.removeLayer(pins[i])
+                    }
+                    getBusLocations();
+                    getLocation();
+                }
+                document.getElementById("ref").onclick = function () { refBusLocations(); };
+
+
+                getLocation();
+                function getLocation() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(showPosition);
+                    } else {
+                        alert("Geolocation is not supported by this browser.");
+                    }
+                }
+                function showPosition(position) {
+                    L.marker([position.coords.latitude, position.coords.longitude], { icon: goldIcon }).addTo(map).bindPopup("Your Location").openPopup();
+                }
+            }
+
+
+
+        </script>
+
+        <div id="map" style="height: 900px; width:900px; --articleTextColour: black;">
+
+        </div>
+    <script>
+        document.onload = doo()
+    </script>
+</body>
+
+</html>
