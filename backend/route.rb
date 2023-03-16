@@ -70,19 +70,21 @@ def router(tmp,rt)
     end
         return work
 end
-get "/dirs/:no" do
+get "/dirs/" do
+    dest = params[:dest]
+    home = params[:home]
     response['Access-Control-Allow-Origin'] = '*'
-    response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?alternatives=true&departure_time=1679904565&origin=53.377574,-1.500205&destination=Attercliffe&mode=transit&transit_mode=bus&key="+$keys[1])
+    response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?alternatives=true&departure_time=1679904565&origin="+home+"&destination=place_id:"+dest+"&mode=transit&transit_mode=bus&key="+$keys[1])
     @doc = Nokogiri::XML(response)
     content_type :json
     tmp = "{\"data\": ["
-    i = 0
+
     
     @doc.css("route").each do |rt|
 
         
-    if (params[:no].to_i == i)
-        
+
+        tmp += "{\"r\": ["
         rt.css("leg step").each do |node|
             if (node.css("travel_mode").children.text == "TRANSIT")
             
@@ -100,16 +102,37 @@ get "/dirs/:no" do
                 tmp+="\"deploc\" : \"" +node.css("transit_details departure_stop location").children.text.delete!("\n")  + "\","
                 tmp+="\"arrname\" : \"" +node.css("transit_details arrival_stop name").children.text  + "\","
                 tmp+="\"arrloc\" : \"" +node.css("transit_details arrival_stop location").children.text.delete!("\n")  + "\""
-                tmp += "}, \n"
-            
+                tmp += "},"
             end
         end
-    
-    
+        tmp.delete_suffix!(",")
+        tmp += "]},"
     end
-    i +=1
-    puts i  
-    end
+    tmp.delete_suffix!(",")
+    tmp += "]}"
+    tmp
+end
+get "/search/" do
+    dest = params[:dest]
+
+    response['Access-Control-Allow-Origin'] = '*'
+    response = RestClient.get("https://maps.googleapis.com/maps/api/place/autocomplete/xml?input="+dest+"&key="+$keys[1])
+    @doc = Nokogiri::XML(response)
+    content_type :json
+    tmp = "{\"data\": ["
+  
+ 
+        @doc.css("prediction").each do |node|
+
+            
+                tmp += "{"
+                tmp+= "\"id\" : \"" + node.css("reference").text + "\","
+                tmp+="\"name\" : \"" +node.css("description").text  + "\""
+                tmp += "},"
+            
+
+        end
+
 
     tmp += "{}]}"
     tmp

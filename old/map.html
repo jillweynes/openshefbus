@@ -15,7 +15,7 @@
 
 <body>
     <p>Host: <span id="host"></span></p>
-    <p>Destination(not implemented): <span id="dest"></span></p>
+    <p>Destination ID: <span id="dest"></span></p>
     <h1>Map View</h1>
         <p id="ref">refresh</p>
         <script>
@@ -54,7 +54,7 @@
 
 
 
-                fetch('https://' + host + '/dirs/' + 'needtoaddplacepicker')
+                fetch('http://' + host + '/dirs/' + '0' + '?dest=' + dest + "&home="  + "53.377574,-1.500205")
                     .then((response) => response.json())
                     .then((data) => setRoute(data));
 
@@ -80,7 +80,7 @@
 
                 function setRouteView() {
                     for (let index = 0; index < routes.length; index++) {
-                        fetch('https://' + host + '/route/' + routes[index])
+                        fetch('http://' + host + '/route/' + routes[index])
                             .then((response) => response.json())
                             .then((data) => route(data, index));
 
@@ -99,7 +99,7 @@
 
                 function getBusLocations() {
                     for (let index = 0; index < routes.length; index++) {
-                        fetch('https://' + host + '/data/' + routes[index])
+                        fetch('http://' + host + '/data/' + routes[index])
                             .then((response) => response.json())
                             .then((data) => handle(data, routes[index]));
                     }

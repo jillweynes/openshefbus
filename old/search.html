@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <p>Host: <span id="host"></span></p>
+    <p>Q: <span id="q"></span></p>
+    <h1>Items:</h1>
+        <script>
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+
+            var host = urlParams.get('i');
+            document.getElementById("host").innerText = host;
+            var dest = urlParams.get('q');
+            document.getElementById("q").innerText = dest;
+            function doo() {
+                
+
+
+                fetch('http://' + host + '/search/' + '?dest=' + dest)
+                    .then((response) => response.json())
+                    .then((data) => setRoute(data));
+
+
+
+                function setRoute(json) {
+                    for (let i = 0; i < json['data'].length - 1; i++) {
+                        var link = document.createElement("a")
+                        link.setAttribute("href", "map.html?i=" + host + "&q=" + json['data'][i]['id'])
+                        link.innerText = json['data'][i]['name']
+                        document.getElementById("out").appendChild(link)
+                    }
+                }
+
+
+
+                
+            }
+
+
+
+        </script>
+        <div id="out"></div>
+        </div>
+    <script>
+        document.onload = doo()
+    </script>
+</body>
+
+</html>
