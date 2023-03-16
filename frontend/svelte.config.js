@@ -13,8 +13,6 @@ export default {
     }),
 	 paths: {
       base: '',
-      
     },
-    appDir: 'internal'
   }
 };
