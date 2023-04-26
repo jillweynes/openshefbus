@@ -71,10 +71,11 @@ def router(tmp,rt)
         return work
 end
 get "/dirs/" do
+    time = Time.now.to_i.to_s
     dest = params[:dest]
     home = params[:home]
     response['Access-Control-Allow-Origin'] = '*'
-    response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?alternatives=true&departure_time=1679904565&origin="+home+"&destination=place_id:"+dest+"&mode=transit&transit_mode=bus&key="+$keys[1])
+    response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?alternatives=true&departure_time="+time+"&origin="+home+"&destination=place_id:"+dest+"&mode=transit&transit_mode=bus&key="+$keys[1])
     @doc = Nokogiri::XML(response)
     content_type :json
     tmp = "{\"data\": ["
@@ -91,13 +92,32 @@ get "/dirs/" do
                 tmp += "{"
                 tmp+= "\"typ\" : \"" + "TRANSIT" + "\","
                 name = "";
+                bound = "UNKNOWN"
+
                 if (!node.css("transit_details line short_name").children.text.empty?)
                     name = node.css("transit_details line short_name").children.text.delete_suffix(" Sheffield")
+
+                    fullname = node.css("transit_details line > name").children.text
+                    header = node.css("transit_details > headsign").children.text
+                    places = fullname.split("-")
+                    
+                    if (places != nil && places.length == 2)
+                        puts places[0] + " " + places[1] + " " + header
+                        if (places[0].strip.upcase == header.upcase)
+                            bound = "OUTBOUND"
+                        elsif(places[1].strip.upcase == header.upcase)
+                            bound = "INBOUND"
+                        end
+                    end
+                    
                 elsif (!node.css("transit_details line name").children.text.empty?)
                     name = node.css("transit_details line > name").children.text.delete_suffix(" Steel Link")
                 end
 
+
+
                 tmp+="\"rtname\" : \"" + name  + "\","
+                tmp+="\"bound\" : \"" +  bound + "\","
                 tmp+="\"depname\" : \"" +node.css("transit_details departure_stop name").children.text  + "\","
                 tmp+="\"deploc\" : \"" +node.css("transit_details departure_stop location").children.text.delete!("\n")  + "\","
                 tmp+="\"arrname\" : \"" +node.css("transit_details arrival_stop name").children.text  + "\","
@@ -127,13 +147,13 @@ get "/search/" do
             
                 tmp += "{"
                 tmp+= "\"id\" : \"" + node.css("reference").text + "\","
-                tmp+="\"name\" : \"" +node.css("description").text  + "\""
+                tmp+="\"name\" : \"" +node.css("> description").text  + "\""
                 tmp += "},"
             
 
         end
 
-
-    tmp += "{}]}"
+    tmp.delete_suffix!(",")
+    tmp += "]}"
     tmp
 end

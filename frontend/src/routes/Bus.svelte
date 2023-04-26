@@ -3,9 +3,7 @@
 
 </script>
 <div>
-<p>Bus:</p>
-<p>{bus.rtname}</p>
-<p>{bus.depname}</p>
+<p>{bus.rtname} from {bus.depname}</p>
 </div>
 <style>
 div {

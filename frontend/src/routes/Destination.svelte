@@ -1,11 +1,12 @@
 <script>
     export let destination;
 </script>
-<h1>{destination.name}</h1>
+<p>{destination.name}</p>
 <style>
-    h1 {
+    p {
         background-color: lightgray;
         border-radius: 10px;
         padding: 10px;
+        margin: 10px;
     }
 </style>

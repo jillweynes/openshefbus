@@ -9,7 +9,6 @@
     let host = "";
     let counter = 0;
 
-    
     export async function load(info) {
         console.log("Start Load");
         host = info.host;
@@ -30,45 +29,52 @@
         routeInfos = data;
     }
     async function select(rt) {
-        console.log("here")
+        console.log("here");
         var map = new Map({
             target: document.querySelector("#Map"),
         });
- 
-        console.log("here2")
+
+        console.log("here2");
         map.load({
             host: host,
-            r: rt.r
+            r: rt.r,
         });
-        console.log("here3")
-        routeInfos = [rt]
-
+        console.log("here3");
+        routeInfos = [rt];
     }
-    
-        
-    
 </script>
 
-
-{#each routeInfos as rt}
-
-    <div
-        on:click={select(rt)}
-        on:keypress={{}}
-    >
-        <p>Route:</p>
-        {#each rt.r as bus}
-
-            <Bus {bus} />
-        {/each}
-
-    </div>
-{/each}
+<div>
+    {#each routeInfos as rt}
+        <div on:click={select(rt)} on:keypress={{}}>
+            <p>Route:</p>
+            {#each rt.r as bus}
+                <Bus {bus} />
+            {/each}
+        </div>
+    {/each}
+</div>
 
 <style>
-    div {
+    div div {
         background-color: lightgray;
         border-radius: 10px;
         padding: 10px;
+        margin: 10px;
+    }
+    div div p {
+        display: inline-block;
+        line-height: 2.5;
+    }
+    div {
+        display: flex;
+
+        flex-direction: row;
+    }
+
+    @media (max-width: 800px) {
+        div {
+            flex-direction: column;
+        }
     }
 </style>

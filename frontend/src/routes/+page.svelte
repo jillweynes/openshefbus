@@ -5,11 +5,11 @@
     import Destination from "./Destination.svelte";
 
     let mode = 0;
-    let host =
-        "https://deploy.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io";
+   // let host =
+    //    "https://deploy.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io";
     let locations = [];
 
-    //let host = "http://localhost:4567";
+    let host = "http://localhost:4567";
 
     let location = [];
     let destination = "";
@@ -53,13 +53,18 @@
         locations = data;
     }
     function goBackToRoutes() {
+        document.querySelector('#Rts').innerHTML =  '';
+        console.log('cleared');
         loadRoute();
         document.querySelector('#Map').innerHTML = '';
+    }
+    function refreshPage() {
+        document.location.reload();
     }
 </script>
 
 <main>
-    <h1>Main View</h1>
+    <h1>Open Shef Bus</h1>
     {#if mode == 0}
         <input type="text" bind:value={query} />
         <input type="button" value="Search" on:click={loadSearch} />
@@ -70,7 +75,8 @@
         </div>
     {/each}
     {#if mode == 1}
-    <input type="button" value="Go back to routes" on:click={goBackToRoutes} />
+    <input type="button" value="Change Location" on:click={refreshPage} />
+    <input type="button" value="Reload Routes" on:click={goBackToRoutes} />
     {/if}
     <div id="Rts" />
     <div id="Map" />
