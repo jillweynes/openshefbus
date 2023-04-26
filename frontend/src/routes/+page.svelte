@@ -5,11 +5,11 @@
     import Destination from "./Destination.svelte";
 
     let mode = 0;
-   // let host =
-    //    "https://deploy.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io";
+    let host =
+        "https://deploy.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io";
     let locations = [];
 
-    let host = "http://localhost:4567";
+    //let host = "http://localhost:4567";
 
     let location = [];
     let destination = "";
