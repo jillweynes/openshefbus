@@ -43,7 +43,7 @@
     function setLocation(loc) {
         destination = loc.id;
         console.log(loc.id);
-        
+
         locations = [loc];
         loadRoute();
     }
@@ -53,20 +53,23 @@
         locations = data;
     }
     function goBackToRoutes() {
-        document.querySelector('#Rts').innerHTML =  '';
-        console.log('cleared');
+        document.querySelector("#Rts").innerHTML = "";
+        console.log("cleared");
         loadRoute();
-        document.querySelector('#Map').innerHTML = '';
+        document.querySelector("#Map").innerHTML = "";
     }
     function refreshPage() {
         document.location.reload();
     }
+    const onEnterPress = (e) => {
+        if (e.charCode === 13) loadSearch();
+    };
 </script>
 
 <main>
     <h1>Open Shef Bus</h1>
     {#if mode == 0}
-        <input type="text" bind:value={query} />
+        <input type="text" bind:value={query} on:keypress={onEnterPress} />
         <input type="button" value="Search" on:click={loadSearch} />
     {/if}
     {#each locations as destination}
@@ -75,8 +78,8 @@
         </div>
     {/each}
     {#if mode == 1}
-    <input type="button" value="Change Location" on:click={refreshPage} />
-    <input type="button" value="Reload Routes" on:click={goBackToRoutes} />
+        <input type="button" value="Change Location" on:click={refreshPage} />
+        <input type="button" value="Reload Routes" on:click={goBackToRoutes} />
     {/if}
     <div id="Rts" />
     <div id="Map" />
