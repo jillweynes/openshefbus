@@ -16,6 +16,8 @@
 
     let query = "";
 
+    let destLoading = false;
+
     function loadRoute() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -48,8 +50,10 @@
         loadRoute();
     }
     async function loadSearch() {
+        destLoading = true;
         let response = await fetch(host + "/search/" + "?dest=" + query);
         let { data } = await response.json();
+        destLoading = false;
         locations = data;
     }
     function goBackToRoutes() {
@@ -71,6 +75,9 @@
     {#if mode == 0}
         <input type="text" bind:value={query} on:keypress={onEnterPress} />
         <input type="button" value="Search" on:click={loadSearch} />
+    {/if}
+    {#if destLoading}
+        <p>Loading...</p>
     {/if}
     {#each locations as destination}
         <div on:click={setLocation(destination)} on:keypress={{}}>

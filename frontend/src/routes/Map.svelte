@@ -55,13 +55,14 @@
         for (let i = 0; i < busData.length; i++) {
             let response = await fetch(host + "/route/" + busData[i].rtname);
             let { data } = await response.json();
-            addRouteToMap(data);
+            addRouteToMap(data, i);
         }
     }
-    function addRouteToMap(lines) {
+    function addRouteToMap(lines, rtid) {
+        var colos = new Array("blue", "green","yellow", "orange", "pink", "purple", "black");
         for (let i = 0; i < lines.length; i++) {
-            var colos = new Array("blue", "black");
-            var colo = colos[0];
+            
+            var colo = colos[rtid];
             L.polyline(lines[i]).addTo(map).setStyle({ color: colo });
         }
     }

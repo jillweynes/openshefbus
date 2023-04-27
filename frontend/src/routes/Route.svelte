@@ -9,12 +9,14 @@
     let host = "";
     let counter = 0;
 
+    let routeLoading = false;
+
     export async function load(info) {
         console.log("Start Load");
         host = info.host;
         location = info.location;
         destination = info.destination;
-
+        routeLoading = true;
         let response = await fetch(
             host +
                 "/dirs/?home=" +
@@ -25,7 +27,7 @@
                 destination
         );
         let { data } = await response.json();
-
+        routeLoading = false;
         routeInfos = data;
     }
     async function select(rt) {
@@ -43,7 +45,9 @@
         routeInfos = [rt];
     }
 </script>
-
+{#if routeLoading}
+    <p>Loading....</p>
+{/if}
 <div>
     {#each routeInfos as rt}
         <div on:click={select(rt)} on:keypress={{}}>
