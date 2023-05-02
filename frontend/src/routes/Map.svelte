@@ -59,9 +59,16 @@
         }
     }
     function addRouteToMap(lines, rtid) {
-        var colos = new Array("blue", "green","yellow", "orange", "pink", "purple", "black");
+        var colos = new Array(
+            "blue",
+            "green",
+            "yellow",
+            "orange",
+            "pink",
+            "purple",
+            "black"
+        );
         for (let i = 0; i < lines.length; i++) {
-            
             var colo = colos[rtid];
             L.polyline(lines[i]).addTo(map).setStyle({ color: colo });
         }
@@ -77,9 +84,9 @@
         for (let i = 0; i < data.length - 1; i++) {
             let lat = parseFloat(data[i]["lat"]);
             let lon = parseFloat(data[i]["lon"]);
-            if (bound.trim().toUpperCase() == "UNKNOWN") {    
+            if (bound.trim().toUpperCase() == "UNKNOWN") {
                 pins.push(
-                    L.marker([lat, lon], {icon: busQuestion})
+                    L.marker([lat, lon], { icon: busQuestion })
                         .addTo(map)
                         .bindPopup(
                             "A " +
@@ -91,20 +98,44 @@
                                 "\n. inbound or outbound could not be determined from google maps"
                         )
                 );
-            }
-            else if ( data[i]["bound"].trim().toUpperCase() == bound.trim().toUpperCase()) {
+            } else if (
+                data[i]["bound"].trim().toUpperCase() ==
+                bound.trim().toUpperCase()
+            ) {
                 pins.push(
-                    L.marker([lat, lon], {icon: busTick})
+                    L.marker([lat, lon], { icon: busTick })
                         .addTo(map)
-                        .bindPopup(
-                            "A " +
-                                route +
-                                " bus with " +
-                                data[i]["id"]
-                        )
+                        .bindPopup("A " + route + " bus with " + data[i]["id"])
+                        .on("click", function (pin) {
+                            addEstimatedToPopup(pin, route, [lat, lon]);
+                        })
                 );
             }
         }
+    }
+    function addEstimatedToPopup(pin, route, pos) {
+        if (route == busData[0]["rtname"]) {
+            var popup = pin.target.getPopup();
+            addSpecificEndTime(popup, pos);
+        }
+    }
+    export async function addSpecificEndTime(popup, pos) {
+        let text = popup.getContent();
+        popup.setContent(text + ". Time away: Loading...");
+        let stcoods = busData[0]["deploc"].trim().split("      ");
+        let response = await fetch(
+            host +
+                "/time/" +
+                pos[0] +
+                "," +
+                pos[1] +
+                "/" +
+                stcoods[0].trim() +
+                "," +
+                stcoods[1].trim()
+        );
+        var e= await response.text()
+        popup.setContent(text + ". Time away: " + e);
     }
     function loadUserLocation() {
         if (navigator.geolocation) {
@@ -171,8 +202,7 @@
         busTick = new L.Icon({
             iconUrl:
                 "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bus.svg",
-            shadowUrl:
-                "https://www.svgrepo.com/show/43432/tick.svg",
+            shadowUrl: "https://www.svgrepo.com/show/43432/tick.svg",
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],
@@ -181,8 +211,7 @@
         busQuestion = new L.Icon({
             iconUrl:
                 "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bus.svg",
-            shadowUrl:
-                "https://www.svgrepo.com/show/510152/question.svg",
+            shadowUrl: "https://www.svgrepo.com/show/510152/question.svg",
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],

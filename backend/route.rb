@@ -4,12 +4,13 @@ get "/" do
     "Hello world"
 end
 get "/data/:route" do
-    response['Access-Control-Allow-Origin'] = '*'
+    get_response_header(request,response)
     tmp = "{\"data\": ["
 
 
     tmp += worker("7035", params[:route],"Stagecoach")
     tmp += worker("7889", params[:route], "First")
+    tmp += worker("7346", params[:route], "TM Travel")
     tmp += "{}]}"
     return tmp
 end
@@ -39,7 +40,7 @@ end
 
 
 get "/route/:route" do
-    response['Access-Control-Allow-Origin'] = '*'
+    get_response_header(request,response)
     content_type :json
     rt = params[:route]
     rt.delete_suffix!("a")
@@ -47,6 +48,7 @@ get "/route/:route" do
     work = "{\"data\": ["
     work += router(JSON.parse(File.readlines("db/route.json")[0]), rt)
     work += router(JSON.parse(File.readlines("db/route2.json")[0]),rt)
+    work += router(JSON.parse(File.readlines("db/route3.json")[0]),rt)
 
 
 work.delete_suffix!(",")
@@ -74,7 +76,7 @@ get "/dirs/" do
     time = Time.now.to_i.to_s
     dest = params[:dest]
     home = params[:home]
-    response['Access-Control-Allow-Origin'] = '*'
+    get_response_header(request,response)
     response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?alternatives=true&departure_time="+time+"&origin="+home+"&destination=place_id:"+dest+"&mode=transit&transit_mode=bus&key="+$keys[1])
     @doc = Nokogiri::XML(response)
     content_type :json
@@ -95,21 +97,23 @@ get "/dirs/" do
                 bound = "UNKNOWN"
 
                 if (!node.css("transit_details line short_name").children.text.empty?)
-                    name = node.css("transit_details line short_name").children.text.delete_suffix(" Sheffield")
+                    name = node.css("transit_details line short_name").children.text.delete_suffix(" Sheffield").delete_suffix(" PE∆KLINE")
 
                     fullname = node.css("transit_details line > name").children.text
                     header = node.css("transit_details > headsign").children.text
                     places = fullname.split("-")
                     
                     if (places != nil && places.length == 2)
-                        puts places[0] + " " + places[1] + " " + header
+                        # puts places[0] + " " + places[1] + " " + header
                         if (places[0].strip.upcase == header.upcase)
                             bound = "OUTBOUND"
                         elsif(places[1].strip.upcase == header.upcase)
                             bound = "INBOUND"
+                        elsif(name == "120" && header.upcase == "CRYSTAL PEAKS" && places[1].strip.upcase == "HALFWAY")
+                            # Override for common student bus
+                            bound = "INBOUND"
                         end
                     end
-                    
                 elsif (!node.css("transit_details line name").children.text.empty?)
                     name = node.css("transit_details line > name").children.text.delete_suffix(" Steel Link")
                 end
@@ -135,7 +139,7 @@ end
 get "/search/" do
     dest = params[:dest]
 
-    response['Access-Control-Allow-Origin'] = '*'
+    get_response_header(request,response)
     response = RestClient.get("https://maps.googleapis.com/maps/api/place/autocomplete/xml?input="+dest+"&key="+$keys[1])
     @doc = Nokogiri::XML(response)
     content_type :json
@@ -156,4 +160,33 @@ get "/search/" do
     tmp.delete_suffix!(",")
     tmp += "]}"
     tmp
+end
+get '/time/:start/:end' do
+    get_response_header(request,response)
+    time = Time.now.to_i.to_s
+    start = params[:start]
+    en = params[:end]
+    response = RestClient.get("https://maps.googleapis.com/maps/api/directions/xml?departure_time="+time+"&origin="+start+"&destination="+en+"&mode=car&key="+$keys[1])
+    @doc = Nokogiri::XML(response)
+    puts @doc.text
+    content_type :json
+    @doc.css("duration_in_traffic text").text
+end
+def get_response_header(request, response)
+    origin_header = request.env['HTTP_ORIGIN']
+    puts origin_header
+    
+    
+    allowed = ['https://jillweynes.github.io','http://localhost:8000']
+    found = 0
+    counter = 0;
+    allowed.each do |val|
+        if (val == origin_header)
+            found = counter
+        end
+        counter+=1
+    end
+
+    response['Access-Control-Allow-Origin'] = allowed[found]
+    
 end
