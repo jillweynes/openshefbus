@@ -6,7 +6,7 @@
 
     let mode = 0;
     let host =
-        "https://deploy.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io";
+        "https://shefbus.thankfulsmoke-89b0f183.northeurope.azurecontainerapps.io/";
     let locations = [];
 
     //let host = "http://localhost:4567";
