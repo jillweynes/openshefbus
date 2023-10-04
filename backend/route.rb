@@ -31,6 +31,7 @@ def worker(id, route, name)
             tmp+= "\"lat\" : \"" + node.css("VehicleLocation Latitude").children.text + "\","
             tmp += "\"lon\" : \"" + node.css("VehicleLocation Longitude").children.text  + "\","
             tmp += "\"id\" : \""+ name + "\","
+            tmp += "\"dest\" : \"" + node.css("DestinationName").children.text.gsub("_", " ") + "\","
             tmp += "\"bound\" : \"" + node.css("DirectionRef").children.text + "\""
             tmp += "}, \n"
         end
@@ -94,6 +95,7 @@ get "/dirs/" do
                 tmp += "{"
                 tmp+= "\"typ\" : \"" + "TRANSIT" + "\","
                 name = "";
+                header = "UNKNOWN"
                 bound = "UNKNOWN"
 
                 if (!node.css("transit_details line short_name").children.text.empty?)
@@ -101,19 +103,7 @@ get "/dirs/" do
 
                     fullname = node.css("transit_details line > name").children.text
                     header = node.css("transit_details > headsign").children.text
-                    places = fullname.split("-")
                     
-                    if (places != nil && places.length == 2)
-                        # puts places[0] + " " + places[1] + " " + header
-                        if (places[0].strip.upcase == header.upcase)
-                            bound = "OUTBOUND"
-                        elsif(places[1].strip.upcase == header.upcase)
-                            bound = "INBOUND"
-                        elsif(name == "120" && header.upcase == "CRYSTAL PEAKS" && places[1].strip.upcase == "HALFWAY")
-                            # Override for common student bus
-                            bound = "INBOUND"
-                        end
-                    end
                 elsif (!node.css("transit_details line name").children.text.empty?)
                     name = node.css("transit_details line > name").children.text.delete_suffix(" Steel Link")
                 end
@@ -121,7 +111,7 @@ get "/dirs/" do
 
 
                 tmp+="\"rtname\" : \"" + name  + "\","
-                tmp+="\"bound\" : \"" +  bound + "\","
+                tmp+="\"header\" : \"" +  header + "\","
                 tmp+="\"depname\" : \"" +node.css("transit_details departure_stop name").children.text  + "\","
                 tmp+="\"deploc\" : \"" +node.css("transit_details departure_stop location").children.text.delete!("\n")  + "\","
                 tmp+="\"arrname\" : \"" +node.css("transit_details arrival_stop name").children.text  + "\","
@@ -177,7 +167,7 @@ def get_response_header(request, response)
     puts origin_header
     
     
-    allowed = ['https://jillweynes.github.io','http://localhost:8000']
+    allowed = ['https://jillweynes.github.io','http://localhost:5173']
     found = 0
     counter = 0;
     allowed.each do |val|

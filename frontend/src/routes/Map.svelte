@@ -8,11 +8,14 @@
     let arrivalIcon = null;
     let departureIcon = null;
     let locIcon = null;
-    let busTick = null;
+    let busUp = null;
+    let busDown = null;
     let busQuestion = null;
 
     let host = null;
     let location = [];
+
+    let finalDirs = "";
 
     export async function refreshBusData() {
         console.log("refreshBusData");
@@ -56,6 +59,11 @@
             let response = await fetch(host + "/route/" + busData[i].rtname);
             let { data } = await response.json();
             addRouteToMap(data, i);
+
+            if (finalDirs != "") {
+                finalDirs += ", ";
+            }
+            finalDirs += busData[i].header
         }
     }
     function addRouteToMap(lines, rtid) {
@@ -77,40 +85,61 @@
         for (let i = 0; i < busData.length; i++) {
             let response = await fetch(host + "/data/" + busData[i].rtname);
             let { data } = await response.json();
-            handleLocation(data, busData[i].rtname, busData[i].bound);
+            handleLocation(data, busData[i].rtname);
         }
     }
-    function handleLocation(data, route, bound) {
+    function handleLocation(data, route) {
         for (let i = 0; i < data.length - 1; i++) {
             let lat = parseFloat(data[i]["lat"]);
             let lon = parseFloat(data[i]["lon"]);
-            if (bound.trim().toUpperCase() == "UNKNOWN") {
-                pins.push(
-                    L.marker([lat, lon], { icon: busQuestion })
+
+            let ico = busQuestion;
+
+            if (data[i]["bound"].toLowerCase() == "inbound") {
+                ico = busUp
+            }
+            else if (data[i]["bound"].toLowerCase() == "outbound") {
+                ico = busDown
+            }
+
+            pins.push(
+                    L.marker([lat, lon], { icon: ico })
                         .addTo(map)
                         .bindPopup(
                             "A " +
                                 route +
                                 " bus with " +
                                 data[i]["id"] +
-                                " direction " +
-                                data[i]["bound"] +
-                                "\n. inbound or outbound could not be determined from google maps"
+                                " bound " +
+                                data[i]["bound"] + " (" + data[i]["dest"] + ")"                        
                         )
                 );
-            } else if (
-                data[i]["bound"].trim().toUpperCase() ==
-                bound.trim().toUpperCase()
-            ) {
-                pins.push(
-                    L.marker([lat, lon], { icon: busTick })
-                        .addTo(map)
-                        .bindPopup("A " + route + " bus with " + data[i]["id"])
-                        .on("click", function (pin) {
-                            addEstimatedToPopup(pin, route, [lat, lon]);
-                        })
-                );
-            }
+
+            // if (bound.trim().toUpperCase() == "UNKNOWN") {
+            //     
+            // } else if (
+            //     data[i]["bound"].trim().toUpperCase() ==
+            //     bound.trim().toUpperCase()
+            // ) {
+            //     pins.push(
+            //         L.marker([lat, lon], { icon: busTick })
+            //             .addTo(map)
+            //             .bindPopup("A " + route + " bus with " + data[i]["id"] + " (" + data[i]["bound"] + ")")
+            //             .on("click", function (pin) {
+            //                 addEstimatedToPopup(pin, route, [lat, lon]);
+            //             })
+            //     );
+            // }
+            // else {
+            //     pins.push(
+            //     L.marker([lat, lon], { icon: busCross })
+            //             .addTo(map)
+            //             .bindPopup("A " + route + " bus with " + data[i]["id"] + " (" + data[i]["bound"] + ")")
+            //             .on("click", function (pin) {
+            //                 addEstimatedToPopup(pin, route, [lat, lon]);
+            //             })
+            //     );
+            // }
         }
     }
     function addEstimatedToPopup(pin, route, pos) {
@@ -199,14 +228,23 @@
             popupAnchor: [1, -34],
             shadowSize: [41, 41],
         });
-        busTick = new L.Icon({
+        busUp = new L.Icon({
             iconUrl:
                 "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bus.svg",
-            shadowUrl: "https://www.svgrepo.com/show/43432/tick.svg",
+            shadowUrl: "https://www.svgrepo.com/show/522689/up-circle.svg",
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],
-            shadowSize: [10, 10],
+            shadowSize: [20, 20],
+        });
+        busDown = new L.Icon({
+            iconUrl:
+                "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bus.svg",
+            shadowUrl: "https://www.svgrepo.com/show/522522/down-circle.svg",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [20, 20],
         });
         busQuestion = new L.Icon({
             iconUrl:
@@ -221,6 +259,7 @@
     }
 </script>
 
+<h1>Get busses towards {finalDirs}</h1>
 <input type="button" value="Refresh" on:click={refreshLocationData} />
 
 <div id="map" style="height: 900px; width:100%;" />
